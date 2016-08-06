@@ -1,0 +1,26 @@
+{
+  "description": "Add a CSV (.csv) or Shapefile (.zip) to the map.",
+  "portalURL": "https://www.arcgis.com",
+  "coordinateSystems": [
+    {
+      "label": "WGS84",
+      "wkid": "4326"
+    },
+    {
+      "label": "NZTM",
+      "wkid": "2193"
+    },
+    {
+      "label": "NZMG",
+      "wkid": "27200"
+    },
+    {
+      "label": "WGS84 Web Mercator",
+      "wkid": "3857"
+    },
+    {
+      "label": "WGS84 Mercator 41",
+      "wkid": "3994"
+    }
+  ]
+}

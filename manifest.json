@@ -1,0 +1,15 @@
+{
+  "name": "AddLocalData",
+  "label": "Add Local Data",
+  "platform": "HTML",
+  "version": "0.1",
+  "wabVersion": "2.1",
+  "author": "Shaun Weston",
+  "description": "Adds local data to the map.",
+  "copyright": "",
+  "license": "http://www.apache.org/licenses/LICENSE-2.0",
+  "properties": {
+    "hasConfig": true,
+    "keepConfigAfterMapSwitched": false
+  }
+}

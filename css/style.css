@@ -1,0 +1,38 @@
+/* jimu-widget-add-local-data */
+.jimu-widget-add-local-data{
+  width: 100%;
+  height: 100%;
+  position: relative;
+  font-size: 14px;
+}
+
+.jimu-widget-add-local-data .coordSystem-table > thead > tr > th,
+.jimu-widget-add-local-data .coordSystem-table > tbody > tr > td{
+  height:40px;
+  line-height:40px;
+  vertical-align:middle;
+  padding:5px;
+}
+
+.jimu-widget-add-local-data .dijitTextBox {
+    width:100px;
+}
+
+.jimu-widget-add-local-data .separator {
+  margin-top: 20px;
+}
+
+.jimu-btn {
+    margin-top: 10px;
+    background-color: #485566;
+    color: #ffffff;
+}
+
+.jimu-popup {
+  font-weight: bold;
+  color: #FF0000;
+}
+
+input[type="file"] {
+    display: none;
+}

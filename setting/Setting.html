@@ -1,0 +1,36 @@
+<div>
+    <table class="setting-table input-table" cellspacing="0">
+        <tbody>
+            <tr>
+                <td class="first">${nls.description}:</td>
+                <td class="second">
+                    <input type="text" data-dojo-type="dijit/form/ValidationTextBox"
+                           data-dojo-attach-point="description"
+                           data-dojo-props="style:{width:'100%'}"
+                           required="true" />
+                </td>
+            </tr>
+            <tr class="example">
+                <td class="first"></td>
+                <td class="second"></td>
+            </tr>
+            <tr>
+                <td class="first">${nls.portalURL}:</td>
+                <td class="second" colspan="2">
+                    <input type="text" data-dojo-type="dijit/form/ValidationTextBox"
+                           data-dojo-attach-point="portalURL"
+                           data-dojo-props="style:{width:'100%'}"
+                           required="true" />
+                </td>
+            </tr>
+            <tr class="example">
+                <td class="first"></td>
+                <td class="second">
+                    <span class="example">${nls.example}: https://www.arcgis.com or https://webadaptor.domain.com/arcgis</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div data-dojo-attach-point="coordSystemsTable" class="separator"></div>
+</div>
