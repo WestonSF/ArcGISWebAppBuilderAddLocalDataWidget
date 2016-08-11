@@ -89,13 +89,54 @@ define(["dojo/_base/declare",
                   json.push({
                       label: this.config.coordinateSystems[a].label,
                       wkid: this.config.coordinateSystems[a].wkid,
-                      xmin: this.config.coordinateSystems[a].xmin,
-                      xmax: this.config.coordinateSystems[a].xmax,
-                      ymin: this.config.coordinateSystems[a].ymin,
-                      ymax: this.config.coordinateSystems[a].ymax
                   });
               }
               this.CoordTable.addRows(json);
+          }
+
+          // Setup the data types table
+          var fields = [{
+              name: 'dataType',
+              title: this.nls.dataType,
+              type: 'text',
+
+              unique: false,
+              editable: false
+          }, {
+              name: 'fileExtension',
+              title: this.nls.fileExtension,
+              type: 'text',
+              unique: false,
+              editable: false
+          },
+          {
+              name: '',
+              title: '',
+              width: '100px',
+              type: 'actions',
+              actions: ['up', 'down', 'delete']
+          }
+          ];
+          var args = {
+              fields: fields,
+              selectable: false
+          };
+          this.dataTable = new Table(args);
+          this.dataTable.autoHeight = true;
+          this.dataTable.placeAt(this.dataTypesTable);
+          this.dataTable.startup();
+
+          // Load in data types
+          if (this.config.dataTypes.length > 0) {
+              var json = [];
+              var len = this.config.dataTypes.length;
+              for (var a = 0; a < len; a++) {
+                  json.push({
+                      dataType: this.config.dataTypes[a].label,
+                      fileExtension: this.config.dataTypes[a].fileExtension,
+                  });
+              }
+              this.dataTable.addRows(json);
           }
       },
 
@@ -106,6 +147,24 @@ define(["dojo/_base/declare",
 
           // Get the portal URL
           this.config.portalURL = this.portalURL.get('value');
+
+          // Get the data types
+          var data = this.dataTable.getData();
+          var json = [];
+          var len = data.length;
+          for (var i = 0; i < len; i++) {
+              json.push(data[i]);
+          }
+          this.config.dataTypes = json;
+
+          // Get the coordinate systems
+          var data = this.CoordTable.getData();
+          var json = [];
+          var len = data.length;
+          for (var i = 0; i < len; i++) {
+              json.push(data[i]);
+          }
+          this.config.coordinateSystems = json;
 
           // Return the configuration parameters
           return this.config;

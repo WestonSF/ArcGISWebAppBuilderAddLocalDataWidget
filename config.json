@@ -1,6 +1,32 @@
 {
   "description": "Add a CSV (.csv) or Shapefile (.zip) to the map.",
   "portalURL": "https://www.arcgis.com",
+  "dataTypes": [
+    {
+      "label": "CSV",
+      "fileExtension": ".csv"
+    },
+    {
+      "label": "Shapefile",
+      "fileExtension": ".zip"
+    }
+    // If basemap is in spatial reference of 102100 only
+    //{
+    //  "label": "GeoJSON",
+    //  "fileExtension": ".geojson"
+    //}
+  ],
+    "geometryTypes": [
+      {
+        "type": "Point"
+      },
+      {
+      "type": "Line"
+      },
+      {
+      "type": "Polygon"
+      }
+  ],
   "coordinateSystems": [
     {
       "label": "WGS84",

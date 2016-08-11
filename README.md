@@ -7,7 +7,7 @@ Adds local data to a map - CSV and shapefiles.
 
 * Uploads CSV or shapefile data and adds to the map.
 * Dynamically symbolise the layers added to the map.
-* Configure with different coordinate systems for CSV data.
+* Add polyline and polygon data from a CSV file.
 
 
 ## Requirements

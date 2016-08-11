@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+﻿///////////////////////////////////////////////////////////////////////////
 // Copyright © 2016 Esri. All Rights Reserved.
 //
 // Licensed under the Apache License Version 2.0 (the "License");
@@ -31,6 +31,7 @@ define(["dojo/_base/declare",
     "jimu/utils",
     "jimu/dijit/Message",
     "jimu/dijit/SymbolChooser",
+    "jimu/dijit/TabContainer",
     "jimu/dijit/ViewStack",
     "jimu/dijit/LoadingIndicator",
     "esri/InfoTemplate",
@@ -41,6 +42,7 @@ define(["dojo/_base/declare",
     "esri/symbols/PictureMarkerSymbol",
     "esri/symbols/SimpleFillSymbol",
     "esri/symbols/SimpleLineSymbol",
+    "esri/geometry/webMercatorUtils",
     "esri/request"
   ],
   function (declare,
@@ -61,6 +63,7 @@ define(["dojo/_base/declare",
       utils,
       Message,
       SymbolChooser,
+      TabContainer,
       ViewStack,
       LoadingIndicator,
       InfoTemplate,
@@ -71,6 +74,7 @@ define(["dojo/_base/declare",
       PictureMarkerSymbol,
       SimpleFillSymbol,
       SimpleLineSymbol,
+      webMercatorUtils,
       request)
     {
       // Base widget
@@ -83,12 +87,50 @@ define(["dojo/_base/declare",
       postCreate: function () {
           console.log('Add Local Data widget created...');
 
+          // Setup tabs
+          var tabs = [];
+          tabs.push({
+              title: this.nls.addData,
+              content: this.addDataTab
+          });
+          tabs.push({
+              title: this.nls.symbology,
+              content: this.symbologyTab
+          });
+          this.selTab = this.nls.addData;
+          this.tabContainer = new TabContainer({
+              tabs: tabs,
+              selected: this.selTab
+          }, this.addLocalDataWidget);
+          this.tabContainer.startup();
+          utils.setVerticalCenter(this.tabContainer.domNode);
+
           // Setup the view for symbology chooser
           this.viewStack = new ViewStack({
               viewType: 'dom',
               views: [this.pointSection, this.lineSection, this.polygonSection]
           });
           html.place(this.viewStack.domNode, this.setSymbology);
+
+          // Load in data types to selection
+          var len = this.config.dataTypes.length;
+          for (var a = 0; a < len; a++) {
+              var option = {
+                  value: this.config.dataTypes[a].label,
+                  label: this.config.dataTypes[a].label + " (" + this.config.dataTypes[a].fileExtension + ")"
+              };
+              this.dataTypeSelect.addOption(option);
+          }
+
+          // Load in geomtery types to selection
+          var len = this.config.geometryTypes.length;
+          for (var a = 0; a < len; a++) {
+              var option = {
+                  value: this.config.geometryTypes[a].type,
+                  label: this.config.geometryTypes[a].type
+              };
+              this.geometryTypeSelect.addOption(option);
+          }
 
           // Load in coordinate systems to selection
           var len = this.config.coordinateSystems.length;
@@ -113,6 +155,36 @@ define(["dojo/_base/declare",
          // Initially disable clear button
          domClass.add(this.clearButton, 'jimu-state-disabled');
 
+         // Hide coordinate system selection if only one option present
+         var len = this.config.coordinateSystems.length;
+         if (len < 2) {
+             dojo.style(dojo.byId("coordSystem"), "display", "none");
+         }
+
+         // Hide geometry selection if only one option present
+         var len = this.config.geometryTypes.length;
+         if (len < 2) {
+             dojo.style(dojo.byId("geometryType"), "display", "none");
+         }
+
+        // Attach event function for data type change
+         on(dijit.byId("dataTypeSelect"), "change", function (event) {
+             // Check the data type
+             dataTypeCheck();
+             // Check the geometry type
+             geometryTypeCheck();
+        });
+          // Check the data type
+         dataTypeCheck();
+
+          // Attach event function for geometry type change
+         on(dijit.byId("geometryTypeSelect"), "change", function (event) {
+             // Check the geometry type
+             geometryTypeCheck();
+         });
+          // Check the geometry type
+         geometryTypeCheck();
+
         // EVENT FUNCTION - On file selection
         on(dom.byId("uploadForm"), "change", function (event) {
             var fileName = event.target.value.toLowerCase();
@@ -122,8 +194,8 @@ define(["dojo/_base/declare",
                 var arr = fileName.split("\\");
                 fileName = arr[arr.length - 1];
             }
-            // If a .csv or .zip file
-            if ((fileName.toLowerCase().indexOf(".csv") !== -1) || (fileName.toLowerCase().indexOf(".zip") !== -1)) {
+            // If a .csv,.zip or .geojson file
+            if ((fileName.toLowerCase().indexOf(".csv") !== -1) || (fileName.toLowerCase().indexOf(".zip") !== -1) || (fileName.toLowerCase().indexOf(".geojson") !== -1)) {
                 if (fileName.toLowerCase().indexOf(".csv") !== -1) {
                     // Generate feature collection from the file uploaded
                     checkCSV(fileName);
@@ -131,6 +203,10 @@ define(["dojo/_base/declare",
                 if (fileName.toLowerCase().indexOf(".zip") !== -1) {
                     // Generate feature collection from the file uploaded
                     generateFeatureCollectionFromShapefile(fileName);
+                }
+                if (fileName.toLowerCase().indexOf(".geojson") !== -1) {
+                    // Generate feature collection from the file uploaded
+                    generateFeatureCollectionFromGeoJSON(fileName);
                 }
             }
             // If not a valid file
@@ -140,46 +216,86 @@ define(["dojo/_base/declare",
             }
         });
 
+        // FUNCTION - Data type check
+        function dataTypeCheck() {
+            dataType = mapFrame.dataTypeSelect.value.toLowerCase();
+            // If data type is CSV
+            if (dataType == "csv") {
+                // Show csv parameters
+                dojo.style(dojo.byId("csvTable"), "display", "block");
+                dojo.style(dojo.byId("csvLinePolygonFieldTable"), "display", "block");
+            }
+            else {
+                // Hide csv parameters
+                dojo.style(dojo.byId("csvTable"), "display", "none");
+                dojo.style(dojo.byId("csvLinePolygonFieldTable"), "display", "none");
+            }
+        }
+
+          // FUNCTION - Geometry type check
+        function geometryTypeCheck() {
+            dataType = mapFrame.dataTypeSelect.value.toLowerCase();
+            geometryType = mapFrame.geometryTypeSelect.value.toLowerCase();
+            // If geometry type is line or polygon
+            if (((geometryType == "line") || (geometryType == "polygon")) && (dataType == "csv")) {
+                // Show line/polygon parameter
+                dojo.style(dojo.byId("csvLinePolygonFieldTable"), "display", "block");
+            }
+            else {
+                // Hide line/polygon parameter
+                dojo.style(dojo.byId("csvLinePolygonFieldTable"), "display", "none");
+            }
+        }
+
         // FUNCTION - Check the CSV file
         function checkCSV(fileName) {
+            console.log("Processing the CSV...")
             // If not populated X and Y fields
             if ((fileName.toLowerCase().indexOf(".csv") !== -1) && (mapFrame.xCoordTextBox.get('value') == null || mapFrame.xCoordTextBox.get('value').trim() == "" || mapFrame.yCoordTextBox.get('value') == null || mapFrame.yCoordTextBox.get('value').trim() == "")) {
                 // Show error message
                 showError(mapFrame.nls.noXYFieldsError);
             }
-                // X and Y fields populated
+            // X and Y fields populated
             else {
-                var name = fileName.split(".");
-                // Chrome and IE add c:\fakepath to the value - we need to remove it
-                name = name[0].replace("c:\\fakepath\\", "");
+                // If geometry type is line or polygon and field not populated
+                if (((geometryType == "line") || (geometryType == "polygon")) && (mapFrame.linePolygonFieldTextBox.get('value') == null || mapFrame.linePolygonFieldTextBox.get('value').trim() == "")) {
+                    // Show error message
+                    showError(mapFrame.nls.noLinePolygonError);
+                }
+                else {
+                    var name = fileName.split(".");
+                    // Chrome and IE add c:\fakepath to the value - we need to remove it
+                    name = name[0].replace("c:\\fakepath\\", "");
 
-                // Show loading
-                mapFrame.loading.show();
+                    // Show loading
+                    mapFrame.loading.show();
 
-                var csvDelimiter;
-                var csvFields;
-                // Read the CSV file
-                file = this.inFile.files[0];
-                if (utils.file.supportHTML5()) {
-                    var reader = new FileReader();
-                    reader.onload = lang.hitch(this, function () {
-                        // Generate feature collection from the CSV data  
-                        generateFeatureCollectionFromCSV(reader.result);
-                    });
-                    reader.readAsText(file);
-                } else if (utils.file.supportFileAPI()) {
-                    window.FileAPI.readAsText(file, lang.hitch(this, function (evt) {
-                        // Generate feature collection from the CSV data  
-                        generateFeatureCollectionFromCSV(evt.result);
-                    }));
-                } else {
-                    showError(mapFrame.nls.noFileHandlereSupport);
+                    var csvDelimiter;
+                    var csvFields;
+                    // Read the CSV file
+                    file = mapFrame.inFile.files[0];
+                    if (utils.file.supportHTML5()) {
+                        var reader = new FileReader();
+                        reader.onload = lang.hitch(this, function () {
+                            // Generate feature collection from the CSV data  
+                            generateFeatureCollectionFromCSV(reader.result);
+                        });
+                        reader.readAsText(file);
+                    } else if (utils.file.supportFileAPI()) {
+                        window.FileAPI.readAsText(file, lang.hitch(this, function (evt) {
+                            // Generate feature collection from the CSV data  
+                            generateFeatureCollectionFromCSV(evt.result);
+                        }));
+                    } else {
+                        showError(mapFrame.nls.noFileHandlereSupport);
+                    }
                 }
             }
         }
 
         // FUNCTION - Generate feature collection from csv
         function generateFeatureCollectionFromCSV(data) {
+            console.log("Creating features from the CSV...")
             // Get the column delimiter from the CSV file
             var newLineIndex = data.indexOf('\n');
             var firstLine = lang.trim(data.substr(0, newLineIndex));
@@ -240,18 +356,29 @@ define(["dojo/_base/declare",
 
                     // Use the rest generate operation to generate a feature collection from the zipped shapefile
                     request({
-                        url: mapFrame.config.portalURL + '/sharing/rest/content/features/generate',
+                        url: mapFrame.config.portalURL + "/sharing/rest/content/features/generate",
                         content: myContent,
-                        form: dom.byId('uploadForm'),
-                        handleAs: 'json',
+                        form: dom.byId("uploadForm"),
+                        handleAs: "json",
                         load: lang.hitch(this, function (response) {
                             if (response.error) {
                                 showError(response.error);
                             }
                             if (response.featureCollection.layers[0].featureSet.features.length > 0) {
+                                console.log("Features returned from query to " + mapFrame.config.portalURL + "/sharing/rest/content/features/generate...")
+                                console.log(response.featureCollection)
                                 // If valid geometry
                                 if (response.featureCollection.layers[0].featureSet.features[0].geometry != null) {
-                                    addFeaturesToMap(response.featureCollection);
+                                    // If geometry type is line or polygon
+                                    if (((geometryType == "line") || (geometryType == "polygon")) && (dataType == "csv")) {
+                                        // Generate line/polygon feature collection
+                                        pointsToLinePolygon(response.featureCollection);
+                                    }
+                                    // If point
+                                    else {
+                                        // Add the feature collection to the map
+                                        addFeaturesToMap(response.featureCollection);
+                                    }
                                 }
                                 else {
                                     // Show error message
@@ -278,6 +405,7 @@ define(["dojo/_base/declare",
 
         // FUNCTION - Generate feature collection from shapefile
         function generateFeatureCollectionFromShapefile(fileName) {
+            console.log("Creating features from the shapefile...")
             var name = fileName.split(".");
             // Chrome and IE add c:\fakepath to the value - we need to remove it
             name = name[0].replace("c:\\fakepath\\", "");
@@ -319,17 +447,166 @@ define(["dojo/_base/declare",
                     if (response.error) {
                         showError(response.error);
                     }
+                    // Add the feature collection to the map
                     addFeaturesToMap(response.featureCollection);
                 }),
                 error: lang.hitch(this, showError)
             });
         }
 
+        // FUNCTION - Generate feature collection from GeoJSON - If basemap is in spatial reference of 102100 only
+        function generateFeatureCollectionFromGeoJSON(fileName) {
+            console.log("Creating features from the GeoJSON...")
+            var name = fileName.split(".");
+            // Chrome and IE add c:\fakepath to the value - we need to remove it
+            name = name[0].replace("c:\\fakepath\\", "");
+
+            // Show loading
+            mapFrame.loading.show();
+
+            // Define the input parameters for generate features
+            var params = {
+                'name': name,
+                'sourceSR': { "wkid": mapFrame.coordSystemSelect.value },
+                'targetSR': mapFrame.map.spatialReference,
+                'maxRecordCount': 10000,
+                'enforceInputFileSizeLimit': true,
+                'enforceOutputJsonSizeLimit': true
+            };
+
+            // Generalize features for display
+            var extent = scaleUtils.getExtentForScale(mapFrame.map, 40000);
+            var resolution = extent.getWidth() / mapFrame.map.width;
+            params.generalize = true;
+            params.maxAllowableOffset = resolution;
+            params.reducePrecision = true;
+            params.numberOfDigitsAfterDecimal = 0;
+
+            var myContent = {
+                'filetype': "geojson",
+                'publishParameters': JSON.stringify(params),
+                'f': 'json',
+                'callback.html': 'textarea'
+            };
+
+            // Use the rest generate operation to generate a feature collection from the GeoJSON file
+            request({
+                url: mapFrame.config.portalURL + '/sharing/rest/content/features/generate',
+                content: myContent,
+                form: dom.byId('uploadForm'),
+                handleAs: 'json',
+                load: lang.hitch(this, function (response) {
+                    if (response.error) {
+                        showError(response.error);
+                    }
+                    // Add the feature collection to the map
+                    addFeaturesToMap(response.featureCollection);
+                }),
+                error: lang.hitch(this, showError)
+            });
+        }
+
+        // FUNCTION - Generate lines/polygons from points feature collection
+        function pointsToLinePolygon(featureCollection) {
+            var geometryType = mapFrame.geometryTypeSelect.value.toLowerCase();
+            var linePolygonField = mapFrame.linePolygonFieldTextBox.get('value');
+            var linePolygonFeatures = [];
+            // For each of the layers
+            arrayUtils.forEach(featureCollection.layers, function (layer) {
+                // For each object in the layer - Create new object with unique Id specified
+                arrayUtils.forEach(layer.featureSet.features, function (feature) {
+                    var id = feature.attributes[linePolygonField]
+                    var added = "false";
+                    // For each object in the line features object
+                    arrayUtils.forEach(linePolygonFeatures, function (lineFeature) {
+                        // If feature already added to the object
+                        if (lineFeature.id == id) {
+                            added = "true";
+                        }
+                    });
+
+                    // If feature not added to the object, add a new object
+                    if (added == "false") {
+                        featureObject = {};
+                        featureObject["id"] = id
+                        featureObject["points"] = []
+                        featureObject["points"].push(feature.geometry.x + "," + feature.geometry.y)
+                        featureObject["attributes"] = feature.attributes
+                        linePolygonFeatures.push(featureObject);
+                    }
+                    // Otherwise add to an existing object
+                    else {
+                        featureObject["points"].push(feature.geometry.x + "," + feature.geometry.y)
+                    }
+                });
+            });
+
+            var linePolygonFeaturesNew = [];
+
+            // If geometry is polygon
+            if (geometryType == "polygon") {
+                console.log("Creating polygon features from the CSV...")
+                // For each of the polygon features - Create new geometry polygon features
+                arrayUtils.forEach(linePolygonFeatures, function (polygonFeature) {
+                    var featureObject = {};
+                    featureObject["attributes"] = polygonFeature.attributes;
+                    var polygon = new esri.geometry.Polygon(mapFrame.map.spatialReference);
+                    polygon.type = "polygon";
+                    featureObject["geometry"] = polygon
+                    // For each of the points that make up the line feature
+                    var fullPolygon = [];
+                    arrayUtils.forEach(polygonFeature.points, function (point) {
+                        var polygonPath = [];
+                        var pointSplit = point.split(",");
+                        polygonPath[0] = parseFloat(pointSplit[0]);
+                        polygonPath[1] = parseFloat(pointSplit[1]);
+                        fullPolygon.push(polygonPath)
+                    });
+                    polygon.addRing(fullPolygon);
+                    linePolygonFeaturesNew.push(featureObject);
+                });
+                // Update the feature collection with the geometry type
+                featureCollection.layers[0].featureSet.geometryType = "esriGeometryPolygon";
+                featureCollection.layers[0].layerDefinition.geometryType = "esriGeometryPolygon";
+            }
+            // If geometry is line
+            else {
+                console.log("Creating line features from the CSV...")
+                // For each of the line features - Create new geometry line features
+                arrayUtils.forEach(linePolygonFeatures, function (lineFeature) {
+                    var featureObject = {};
+                    featureObject["attributes"] = lineFeature.attributes;
+                    var polyline = new esri.geometry.Polyline(mapFrame.map.spatialReference);
+                    polyline.type = "polyline";
+                    featureObject["geometry"] = polyline
+                    // For each of the points that make up the line feature
+                    var fullLine = [];
+                    arrayUtils.forEach(lineFeature.points, function (point) {
+                        var linePath = [];
+                        var pointSplit = point.split(",");
+                        linePath[0] = parseFloat(pointSplit[0]);
+                        linePath[1] = parseFloat(pointSplit[1]);
+                        fullLine.push(linePath)
+                    });
+                    polyline.addPath(fullLine);
+                    linePolygonFeaturesNew.push(featureObject);
+                });
+                // Update the feature collection with the geometry type
+                featureCollection.layers[0].featureSet.geometryType = "esriGeometryPolyline";
+                featureCollection.layers[0].layerDefinition.geometryType = "esriGeometryPolyline";
+            }
+            // Update the feature collection with new line features
+            featureCollection.layers[0].featureSet.features = linePolygonFeaturesNew;
+            
+            // Add the feature collection to the map
+            addFeaturesToMap(featureCollection);
+        }
+
         // FUNCTION - Add features to map
         function addFeaturesToMap(featureCollection) {
+            console.log("Adding features to the map...")
             var fullExtent;
             var layers = [];
-  
             arrayUtils.forEach(featureCollection.layers, function (layer) {
                 var infoTemplate = new InfoTemplate("Details", "${*}");
                 var featureLayer = new FeatureLayer(layer, {
@@ -343,6 +620,7 @@ define(["dojo/_base/declare",
                   fullExtent.union(featureLayer.fullExtent) : featureLayer.fullExtent;
                 layers.push(featureLayer);
             });
+                
             // Add to global array
             layersAdded.push(layers);
             // Add layer to map
@@ -360,7 +638,6 @@ define(["dojo/_base/declare",
 
             // Enable clear button
             domClass.remove(mapFrame.clearButton, 'jimu-state-disabled');
-
             // Hide loading
             mapFrame.loading.hide();
 

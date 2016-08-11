@@ -6,8 +6,32 @@
   font-size: 14px;
 }
 
-.jimu-widget-add-local-data .coordSystem-table > thead > tr > th,
-.jimu-widget-add-local-data .coordSystem-table > tbody > tr > td{
+.jimu-widget-add-local-data .dataTypeTable > thead > tr > th,
+.jimu-widget-add-local-data .dataTypeTable > tbody > tr > td{
+  height:40px;
+  line-height:40px;
+  vertical-align:middle;
+  padding:5px;
+}
+
+.jimu-widget-add-local-data .csvTable > thead > tr > th,
+.jimu-widget-add-local-data .csvTable > tbody > tr > td{
+  height:40px;
+  line-height:40px;
+  vertical-align:middle;
+  padding:5px;
+}
+
+.jimu-widget-add-local-data .csvLinePolygonFieldTable > thead > tr > th,
+.jimu-widget-add-local-data .csvLinePolygonFieldTable > tbody > tr > td{
+  height:40px;
+  line-height:40px;
+  vertical-align:middle;
+  padding:5px;
+}
+
+.jimu-widget-add-local-data .buttonsTable > thead > tr > th,
+.jimu-widget-add-local-data .buttonsTable > tbody > tr > td{
   height:40px;
   line-height:40px;
   vertical-align:middle;
