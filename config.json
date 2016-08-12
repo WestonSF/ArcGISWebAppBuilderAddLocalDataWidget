@@ -1,5 +1,5 @@
 {
-  "description": "Add a CSV (.csv) or Shapefile (.zip) to the map.",
+  "description": "Add a CSV (.csv), Shapefile (.zip) or GPX (.gpx) to the map.",
   "portalURL": "https://www.arcgis.com",
   "dataTypes": [
     {
@@ -9,6 +9,10 @@
     {
       "label": "Shapefile",
       "fileExtension": ".zip"
+    },
+    {
+      "label": "GPX",
+      "fileExtension": ".gpx"
     }
     // If basemap is in spatial reference of 102100 only
     //{
@@ -31,22 +35,6 @@
     {
       "label": "WGS84",
       "wkid": "4326"
-    },
-    {
-      "label": "NZTM",
-      "wkid": "2193"
-    },
-    {
-      "label": "NZMG",
-      "wkid": "27200"
-    },
-    {
-      "label": "WGS84 Web Mercator",
-      "wkid": "3857"
-    },
-    {
-      "label": "WGS84 Mercator 41",
-      "wkid": "3994"
     }
   ]
 }

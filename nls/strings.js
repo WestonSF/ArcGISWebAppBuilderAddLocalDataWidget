@@ -1,6 +1,6 @@
 define({
     root: ({
-        notValidFileError: "Please select a valid file - .csv or .zip.",
+        notValidFileError: "Please select a valid file - .csv,.zip or .gpx.",
         noXYFieldsError: "Please enter the X and Y field names.",
         noLinePolygonError: "Please enter a line/polygon field name to create the features on.",
         noLinePolygonFeaturesError: "No features found for the line/polygon field name. Please check the line/polygon field name.",

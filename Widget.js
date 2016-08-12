@@ -194,19 +194,83 @@ define(["dojo/_base/declare",
                 var arr = fileName.split("\\");
                 fileName = arr[arr.length - 1];
             }
-            // If a .csv,.zip or .geojson file
-            if ((fileName.toLowerCase().indexOf(".csv") !== -1) || (fileName.toLowerCase().indexOf(".zip") !== -1) || (fileName.toLowerCase().indexOf(".geojson") !== -1)) {
+            // If a .csv,.zip,.gpx or .geojson file
+            if ((fileName.toLowerCase().indexOf(".csv") !== -1) || (fileName.toLowerCase().indexOf(".zip") !== -1) || (fileName.toLowerCase().indexOf(".gpx") !== -1) || (fileName.toLowerCase().indexOf(".geojson") !== -1)) {
                 if (fileName.toLowerCase().indexOf(".csv") !== -1) {
-                    // Generate feature collection from the file uploaded
-                    checkCSV(fileName);
+                    // Check file type is in the configuration
+                    var fileSelection = "false";
+                    var len = mapFrame.config.dataTypes.length;
+                    for (var a = 0; a < len; a++) {
+                        if (mapFrame.config.dataTypes[a].fileExtension.toLowerCase() == ".csv") {
+                            var fileSelection = "true";
+                        }
+                    }
+                    if (fileSelection == "true") {
+                        // Generate feature collection from the file uploaded
+                        checkCSV(fileName);
+                    }
+                        // If not a valid file
+                    else {
+                        // Show error message
+                        showError(mapFrame.nls.notValidFileError);
+                    }
                 }
                 if (fileName.toLowerCase().indexOf(".zip") !== -1) {
-                    // Generate feature collection from the file uploaded
-                    generateFeatureCollectionFromShapefile(fileName);
+                    // Check file type is in the configuration
+                    var fileSelection = "false";
+                    var len = mapFrame.config.dataTypes.length;
+                    for (var a = 0; a < len; a++) {
+                        if (mapFrame.config.dataTypes[a].fileExtension.toLowerCase() == ".zip") {
+                            var fileSelection = "true";
+                        }
+                    }
+                    if (fileSelection == "true") {
+                        // Generate feature collection from the file uploaded
+                        generateFeatureCollectionFromShapefile(fileName);
+                    }
+                        // If not a valid file
+                    else {
+                        // Show error message
+                        showError(mapFrame.nls.notValidFileError);
+                    }
+                }
+                if (fileName.toLowerCase().indexOf(".gpx") !== -1) {
+                    // Check file type is in the configuration
+                    var fileSelection = "false";
+                    var len = mapFrame.config.dataTypes.length;
+                    for (var a = 0; a < len; a++) {
+                        if (mapFrame.config.dataTypes[a].fileExtension.toLowerCase() == ".gpx") {
+                            var fileSelection = "true";
+                        }
+                    }
+                    if (fileSelection == "true") {
+                        // Generate feature collection from the file uploaded
+                        generateFeatureCollectionFromGPX(fileName);
+                    }
+                        // If not a valid file
+                    else {
+                        // Show error message
+                        showError(mapFrame.nls.notValidFileError);
+                    }
                 }
                 if (fileName.toLowerCase().indexOf(".geojson") !== -1) {
-                    // Generate feature collection from the file uploaded
-                    generateFeatureCollectionFromGeoJSON(fileName);
+                    // Check file type is in the configuration
+                    var fileSelection = "false";
+                    var len = mapFrame.config.dataTypes.length;
+                    for (var a = 0; a < len; a++) {
+                        if (mapFrame.config.dataTypes[a].fileExtension.toLowerCase() == ".geojson") {
+                            var fileSelection = "true";
+                        }
+                    }
+                    if (fileSelection == "true") {
+                        // Generate feature collection from the file uploaded
+                        generateFeatureCollectionFromGeoJSON(fileName);
+                    }
+                        // If not a valid file
+                    else {
+                        // Show error message
+                        showError(mapFrame.nls.notValidFileError);
+                    }
                 }
             }
             // If not a valid file
@@ -331,7 +395,6 @@ define(["dojo/_base/declare",
                     // Define the input parameters for generate features
                     var params = {
                         'name': name,
-                        'sourceSR': { "wkid": mapFrame.coordSystemSelect.value },
                         'targetSR': mapFrame.map.spatialReference,
                         'maxRecordCount': 10000,
                         'locationType': "coordinates",
@@ -454,6 +517,57 @@ define(["dojo/_base/declare",
             });
         }
 
+          // FUNCTION - Generate feature collection from GPX
+        function generateFeatureCollectionFromGPX(fileName) {
+            console.log("Creating features from the GPX...")
+            var name = fileName.split(".");
+            // Chrome and IE add c:\fakepath to the value - we need to remove it
+            name = name[0].replace("c:\\fakepath\\", "");
+
+            // Show loading
+            mapFrame.loading.show();
+
+            // Define the input parameters for generate features
+            var params = {
+                'name': name,
+                'targetSR': mapFrame.map.spatialReference,
+                'maxRecordCount': 10000,
+                'enforceInputFileSizeLimit': true,
+                'enforceOutputJsonSizeLimit': true
+            };
+
+            // Generalize features for display
+            var extent = scaleUtils.getExtentForScale(mapFrame.map, 40000);
+            var resolution = extent.getWidth() / mapFrame.map.width;
+            params.generalize = true;
+            params.maxAllowableOffset = resolution;
+            params.reducePrecision = true;
+            params.numberOfDigitsAfterDecimal = 0;
+
+            var myContent = {
+                'filetype': "gpx",
+                'publishParameters': JSON.stringify(params),
+                'f': 'json',
+                'callback.html': 'textarea'
+            };
+
+            // Use the rest generate operation to generate a feature collection from the zipped shapefile
+            request({
+                url: mapFrame.config.portalURL + '/sharing/rest/content/features/generate',
+                content: myContent,
+                form: dom.byId('uploadForm'),
+                handleAs: 'json',
+                load: lang.hitch(this, function (response) {
+                    if (response.error) {
+                        showError(response.error);
+                    }
+                    // Add the feature collection to the map
+                    addFeaturesToMap(response.featureCollection);
+                }),
+                error: lang.hitch(this, showError)
+            });
+        }
+
         // FUNCTION - Generate feature collection from GeoJSON - If basemap is in spatial reference of 102100 only
         function generateFeatureCollectionFromGeoJSON(fileName) {
             console.log("Creating features from the GeoJSON...")
@@ -467,8 +581,7 @@ define(["dojo/_base/declare",
             // Define the input parameters for generate features
             var params = {
                 'name': name,
-                'sourceSR': { "wkid": mapFrame.coordSystemSelect.value },
-                'targetSR': mapFrame.map.spatialReference,
+                // Only does 102100 - 'targetSR': mapFrame.map.spatialReference,
                 'maxRecordCount': 10000,
                 'enforceInputFileSizeLimit': true,
                 'enforceOutputJsonSizeLimit': true

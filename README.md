@@ -1,11 +1,11 @@
 # Add Local Data Widget for ArcGIS Web AppBuilder
 
-Adds local data to a map - CSV and shapefiles.
+Adds local data to a map - CSV, shapefiles and GPX.
 
 
 ## Features
 
-* Uploads CSV or shapefile data and adds to the map.
+* Creates a feature layer from a CSV, shapefile or GPX and adds to the map.
 * Dynamically symbolise the layers added to the map.
 * Add polyline and polygon data from a CSV file.
 
