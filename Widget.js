@@ -402,8 +402,8 @@ define(["dojo/_base/declare",
                         'latitudeFieldName': mapFrame.yCoordTextBox.get('value'),
                         'columnDelimiter': columnDelimiter,
                         'layerInfo': {
-                            "geometryType": "esriGeometryPoint",
                             "type": "Feature Layer",
+                            "geometryType": "esriGeometryPoint",
                             "fields": layerFields
                         },
                         'enforceInputFileSizeLimit': true,
@@ -435,12 +435,12 @@ define(["dojo/_base/declare",
                                     // If geometry type is line or polygon
                                     if (((geometryType == "line") || (geometryType == "polygon")) && (dataType == "csv")) {
                                         // Generate line/polygon feature collection
-                                        pointsToLinePolygon(response.featureCollection);
+                                        pointsToLinePolygon(response.featureCollection,name);
                                     }
                                     // If point
                                     else {
                                         // Add the feature collection to the map
-                                        addFeaturesToMap(response.featureCollection);
+                                        addFeaturesToMap(response.featureCollection,name);
                                     }
                                 }
                                 else {
@@ -511,7 +511,7 @@ define(["dojo/_base/declare",
                         showError(response.error);
                     }
                     // Add the feature collection to the map
-                    addFeaturesToMap(response.featureCollection);
+                    addFeaturesToMap(response.featureCollection,name);
                 }),
                 error: lang.hitch(this, showError)
             });
@@ -523,7 +523,6 @@ define(["dojo/_base/declare",
             var name = fileName.split(".");
             // Chrome and IE add c:\fakepath to the value - we need to remove it
             name = name[0].replace("c:\\fakepath\\", "");
-
             // Show loading
             mapFrame.loading.show();
 
@@ -562,7 +561,7 @@ define(["dojo/_base/declare",
                         showError(response.error);
                     }
                     // Add the feature collection to the map
-                    addFeaturesToMap(response.featureCollection);
+                    addFeaturesToMap(response.featureCollection,name);
                 }),
                 error: lang.hitch(this, showError)
             });
@@ -613,14 +612,14 @@ define(["dojo/_base/declare",
                         showError(response.error);
                     }
                     // Add the feature collection to the map
-                    addFeaturesToMap(response.featureCollection);
+                    addFeaturesToMap(response.featureCollection,name);
                 }),
                 error: lang.hitch(this, showError)
             });
         }
 
         // FUNCTION - Generate lines/polygons from points feature collection
-        function pointsToLinePolygon(featureCollection) {
+        function pointsToLinePolygon(featureCollection,name) {
             var geometryType = mapFrame.geometryTypeSelect.value.toLowerCase();
             var linePolygonField = mapFrame.linePolygonFieldTextBox.get('value');
             var linePolygonFeatures = [];
@@ -712,11 +711,11 @@ define(["dojo/_base/declare",
             featureCollection.layers[0].featureSet.features = linePolygonFeaturesNew;
             
             // Add the feature collection to the map
-            addFeaturesToMap(featureCollection);
+            addFeaturesToMap(featureCollection,name);
         }
 
         // FUNCTION - Add features to map
-        function addFeaturesToMap(featureCollection) {
+        function addFeaturesToMap(featureCollection,name) {
             console.log("Adding features to the map...")
             var fullExtent;
             var layers = [];
@@ -725,6 +724,8 @@ define(["dojo/_base/declare",
                 var featureLayer = new FeatureLayer(layer, {
                     infoTemplate: infoTemplate
                 });
+                featureLayer.type = "Feature Layer";
+                featureLayer.name = name;
                 // Associate the feature with the popup on click to enable highlight and zoom to
                 featureLayer.on('click', function (event) {
                     mapFrame.map.infoWindow.setFeatures([event.graphic]);
