@@ -814,8 +814,6 @@ define(["dojo/_base/declare",
 
         // EVENT FUNCTION - Clear button click
         on(this.clearButton, 'click', lang.hitch(this, function (evt) {
-            // Clear the file that was selected
-            dom.byId('inFile').value = "";
             // Hide the view for symbology chooser
             mapFrame.viewStack.switchView(null);
 
@@ -834,8 +832,6 @@ define(["dojo/_base/declare",
 
         // FUNCTION - Error handler
         function showError(errorMessage) {
-            // Clear the file that was selected
-            dom.byId('inFile').value = "";
             // Hide loading
             mapFrame.loading.hide();
             // Hide the view for symbology chooser
