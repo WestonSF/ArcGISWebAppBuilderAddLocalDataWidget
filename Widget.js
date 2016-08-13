@@ -342,13 +342,13 @@ define(["dojo/_base/declare",
                         var reader = new FileReader();
                         reader.onload = lang.hitch(this, function () {
                             // Generate feature collection from the CSV data  
-                            generateFeatureCollectionFromCSV(reader.result);
+                            generateFeatureCollectionFromCSV(reader.result,name);
                         });
                         reader.readAsText(file);
                     } else if (utils.file.supportFileAPI()) {
                         window.FileAPI.readAsText(file, lang.hitch(this, function (evt) {
                             // Generate feature collection from the CSV data  
-                            generateFeatureCollectionFromCSV(evt.result);
+                            generateFeatureCollectionFromCSV(evt.result,name);
                         }));
                     } else {
                         showError(mapFrame.nls.noFileHandlereSupport);
@@ -358,7 +358,7 @@ define(["dojo/_base/declare",
         }
 
         // FUNCTION - Generate feature collection from csv
-        function generateFeatureCollectionFromCSV(data) {
+        function generateFeatureCollectionFromCSV(data,name) {
             console.log("Creating features from the CSV...")
             // Get the column delimiter from the CSV file
             var newLineIndex = data.indexOf('\n');
