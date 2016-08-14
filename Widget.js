@@ -725,7 +725,8 @@ define(["dojo/_base/declare",
                     infoTemplate: infoTemplate
                 });
                 featureLayer.type = "Feature Layer";
-                featureLayer.name = name;
+                // Add name of layer in proper text
+                featureLayer.name = name.replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
                 // Associate the feature with the popup on click to enable highlight and zoom to
                 featureLayer.on('click', function (event) {
                     mapFrame.map.infoWindow.setFeatures([event.graphic]);
