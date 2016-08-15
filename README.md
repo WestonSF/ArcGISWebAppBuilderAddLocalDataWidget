@@ -2,6 +2,8 @@
 
 Adds local data to a map - CSV, shapefiles and GPX.
 
+[Demo](http://ec2-52-64-20-102.ap-southeast-2.compute.amazonaws.com/apps/AddLocalDataWidget)
+
 
 ## Features
 

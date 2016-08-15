@@ -755,6 +755,8 @@ define(["dojo/_base/declare",
             domClass.remove(mapFrame.clearButton, 'jimu-state-disabled');
             // Hide loading
             mapFrame.loading.hide();
+            // Reset upload form
+            dom.byId("uploadForm").reset();
 
             // Update the symbol chooser
             if (geometryAdded == 'esriGeometryPolygon') {
@@ -836,6 +838,8 @@ define(["dojo/_base/declare",
         function showError(errorMessage) {
             // Hide loading
             mapFrame.loading.hide();
+            // Reset upload form
+            dom.byId("uploadForm").reset();
             // Hide the view for symbology chooser
             mapFrame.viewStack.switchView(null);
             // Show error message
