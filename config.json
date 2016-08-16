@@ -14,11 +14,6 @@
       "label": "GPX",
       "fileExtension": ".gpx"
     }
-    // If basemap is in spatial reference of 102100 only
-    //{
-    //  "label": "GeoJSON",
-    //  "fileExtension": ".geojson"
-    //}
   ],
     "geometryTypes": [
       {

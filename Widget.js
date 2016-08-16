@@ -665,14 +665,27 @@ define(["dojo/_base/declare",
                     var polygon = new esri.geometry.Polygon(mapFrame.map.spatialReference);
                     polygon.type = "polygon";
                     featureObject["geometry"] = polygon
-                    // For each of the points that make up the line feature
+                    // For each of the points that make up the polygon feature
                     var fullPolygon = [];
+                    var arrayCount = 0;
+                    var firstPoints;
                     arrayUtils.forEach(polygonFeature.points, function (point) {
                         var polygonPath = [];
                         var pointSplit = point.split(",");
                         polygonPath[0] = parseFloat(pointSplit[0]);
                         polygonPath[1] = parseFloat(pointSplit[1]);
                         fullPolygon.push(polygonPath)
+                        // If it's the first point
+                        if (arrayCount == 0) {
+                            // Push into seperate array
+                            firstPoints = polygonPath;
+                        }
+                        // If it's the last point
+                        if (arrayCount == (polygonFeature.points).length - 1) {
+                            // Push first array into polygon features
+                            fullPolygon.push(firstPoints)
+                        }
+                        arrayCount++;
                     });
                     polygon.addRing(fullPolygon);
                     linePolygonFeaturesNew.push(featureObject);
