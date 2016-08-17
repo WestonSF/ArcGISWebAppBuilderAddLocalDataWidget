@@ -96,7 +96,7 @@ define(["dojo/_base/declare",
 
           // Setup the data types table
           var fields = [{
-              name: 'dataType',
+              name: 'label',
               title: this.nls.dataType,
               type: 'text',
 
@@ -132,7 +132,7 @@ define(["dojo/_base/declare",
               var len = this.config.dataTypes.length;
               for (var a = 0; a < len; a++) {
                   json.push({
-                      dataType: this.config.dataTypes[a].label,
+                      label: this.config.dataTypes[a].label,
                       fileExtension: this.config.dataTypes[a].fileExtension,
                   });
               }
