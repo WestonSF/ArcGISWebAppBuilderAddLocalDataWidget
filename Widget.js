@@ -462,7 +462,6 @@ define(["dojo/_base/declare",
                             var params = {
                                 'name': name,
                                 'targetSR': mapFrame.map.spatialReference,
-                                'maxRecordCount': 10000,
                                 'locationType': "coordinates",
                                 'longitudeFieldName': mapFrame.xCoordTextBox.get('value'),
                                 'latitudeFieldName': mapFrame.yCoordTextBox.get('value'),
@@ -471,9 +470,7 @@ define(["dojo/_base/declare",
                                     "type": "Feature Layer",
                                     "geometryType": "esriGeometryPoint",
                                     "fields": layerFields
-                                },
-                                'enforceInputFileSizeLimit': true,
-                                'enforceOutputJsonSizeLimit': true
+                                }
                             };
 
                             var myContent = {
@@ -557,10 +554,7 @@ define(["dojo/_base/declare",
             // Define the input parameters for generate features
             var params = {
                 'name': name,
-                'targetSR': mapFrame.map.spatialReference,
-                'maxRecordCount': 10000,
-                'enforceInputFileSizeLimit': true,
-                'enforceOutputJsonSizeLimit': true
+                'targetSR': mapFrame.map.spatialReference
             };
 
             // Generalize features for display
@@ -607,10 +601,7 @@ define(["dojo/_base/declare",
             // Define the input parameters for generate features
             var params = {
                 'name': name,
-                'targetSR': mapFrame.map.spatialReference,
-                'maxRecordCount': 10000,
-                'enforceInputFileSizeLimit': true,
-                'enforceOutputJsonSizeLimit': true
+                'targetSR': mapFrame.map.spatialReference
             };
 
             // Generalize features for display
@@ -658,10 +649,7 @@ define(["dojo/_base/declare",
             // Define the input parameters for generate features
             var params = {
                 'name': name,
-                // Only does 102100 - 'targetSR': mapFrame.map.spatialReference,
-                'maxRecordCount': 10000,
-                'enforceInputFileSizeLimit': true,
-                'enforceOutputJsonSizeLimit': true
+                // Only does 102100 - 'targetSR': mapFrame.map.spatialReference
             };
 
             // Generalize features for display

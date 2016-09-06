@@ -2,7 +2,7 @@
   "name": "AddLocalData",
   "label": "Add Local Data",
   "platform": "HTML",
-  "version": "0.1",
+  "version": "1.0",
   "wabVersion": "2.1",
   "author": "Shaun Weston",
   "description": "Adds local data to the map.",
