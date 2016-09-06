@@ -63,14 +63,38 @@ define(["dojo/_base/declare",
               type: 'text',
               unique: false,
               editable: false
+          }, {
+              name: 'xmin',
+              title: "XMin",
+              type: 'text',
+              unique: false,
+              editable: false
+          }, {
+              name: 'xmax',
+              title: "XMax",
+              type: 'text',
+              unique: false,
+              editable: false
+          }, {
+              name: 'ymin',
+              title: "YMin",
+              type: 'text',
+              unique: false,
+              editable: false
+          }, {
+              name: 'ymax',
+              title: "YMax",
+              type: 'text',
+              unique: false,
+              editable: false
           },
-          {
-              name: '',
-              title: '',
-              width: '100px',
-              type: 'actions',
-              actions: ['up', 'down', 'delete']
-          }
+        {
+            name: '',
+            title: '',
+            width: '100px',
+            type: 'actions',
+            actions: ['up', 'down', 'delete']
+        }
           ];
           var args = {
               fields: fields,
@@ -89,6 +113,10 @@ define(["dojo/_base/declare",
                   json.push({
                       label: this.config.coordinateSystems[a].label,
                       wkid: this.config.coordinateSystems[a].wkid,
+                      xmin: this.config.coordinateSystems[a].xmin,
+                      xmax: this.config.coordinateSystems[a].xmax,
+                      ymin: this.config.coordinateSystems[a].ymin,
+                      ymax: this.config.coordinateSystems[a].ymax
                   });
               }
               this.CoordTable.addRows(json);

@@ -37,11 +37,14 @@ define(["dojo/_base/declare",
     "esri/InfoTemplate",
     "esri/geometry/scaleUtils",
     "esri/layers/FeatureLayer",
+    "esri/symbols/Font",
     "esri/Color",
+    "esri/symbols/TextSymbol",
     "esri/renderers/SimpleRenderer",
     "esri/symbols/PictureMarkerSymbol",
     "esri/symbols/SimpleFillSymbol",
     "esri/symbols/SimpleLineSymbol",
+    "esri/layers/LabelClass",
     "esri/geometry/webMercatorUtils",
     "esri/request"
   ],
@@ -69,11 +72,14 @@ define(["dojo/_base/declare",
       InfoTemplate,
       scaleUtils,
       FeatureLayer,
+      Font,
       Color,
+      TextSymbol,
       SimpleRenderer,
       PictureMarkerSymbol,
       SimpleFillSymbol,
       SimpleLineSymbol,
+      LabelClass,
       webMercatorUtils,
       request)
     {
@@ -86,7 +92,6 @@ define(["dojo/_base/declare",
       // EVENT FUNCTION - Creation of widget
       postCreate: function () {
           console.log('Add Local Data widget created...');
-
           // Setup tabs
           var tabs = [];
           tabs.push({
@@ -351,14 +356,14 @@ define(["dojo/_base/declare",
                             generateFeatureCollectionFromCSV(evt.result,name);
                         }));
                     } else {
-                        showError(mapFrame.nls.noFileHandlereSupport);
+                        showError(mapFrame.nls.noFileHandlerSupport);
                     }
                 }
             }
         }
 
         // FUNCTION - Generate feature collection from csv
-        function generateFeatureCollectionFromCSV(data,name) {
+        function generateFeatureCollectionFromCSV(data, name) {
             console.log("Creating features from the CSV...")
             // Get the column delimiter from the CSV file
             var newLineIndex = data.indexOf('\n');
@@ -383,78 +388,151 @@ define(["dojo/_base/declare",
             csvStore.fetch({
                 onComplete: lang.hitch(this, function (items) {
                     // Get all the fields from the CSV file
+                    var validxField = false;
+                    var validyField = false;
                     fields = csvStore.getAttributes(items[0]);
                     layerFields = [];
                     // Go through each of the fields and populate the field info
                     fields.forEach(function (field) {
-                        var fieldInfo = {}
-                        fieldInfo['name'] = field;
-                        fieldInfo['alias'] = field;
-                        layerFields.push(fieldInfo);
+                        // If X field present
+                        if (field == mapFrame.xCoordTextBox.get('value')) {
+                            validxField = true;
+                        }
+                        // If Y field present
+                        if (field == mapFrame.yCoordTextBox.get('value')) {
+                            validyField = true;
+                        }
                     });
-                    // Define the input parameters for generate features
-                    var params = {
-                        'name': name,
-                        'targetSR': mapFrame.map.spatialReference,
-                        'maxRecordCount': 10000,
-                        'locationType': "coordinates",
-                        'longitudeFieldName': mapFrame.xCoordTextBox.get('value'),
-                        'latitudeFieldName': mapFrame.yCoordTextBox.get('value'),
-                        'columnDelimiter': columnDelimiter,
-                        'layerInfo': {
-                            "type": "Feature Layer",
-                            "geometryType": "esriGeometryPoint",
-                            "fields": layerFields
-                        },
-                        'enforceInputFileSizeLimit': true,
-                        'enforceOutputJsonSizeLimit': true
-                    };
 
-                    var myContent = {
-                        'filetype': "csv",
-                        'publishParameters': JSON.stringify(params),
-                        'f': 'json',
-                        'callback.html': 'textarea'
-                    };
-
-                    // Use the rest generate operation to generate a feature collection from the zipped shapefile
-                    request({
-                        url: mapFrame.config.portalURL + "/sharing/rest/content/features/generate",
-                        content: myContent,
-                        form: dom.byId("uploadForm"),
-                        handleAs: "json",
-                        load: lang.hitch(this, function (response) {
-                            if (response.error) {
-                                showError(response.error);
+                    // If there are valid x and y fields
+                    if (validxField == true && validyField == true) {
+                        // Get the valid extent for the coordinate system selected
+                        for (var coordinateSystem in mapFrame.config.coordinateSystems) {
+                            // For the selected coordinate system
+                            if (mapFrame.config.coordinateSystems[coordinateSystem].wkid == mapFrame.coordSystemSelect.value) {
+                                // Get the valid extents
+                                var coordinateXmin = mapFrame.config.coordinateSystems[coordinateSystem].xmin;
+                                var coordinateYmin = mapFrame.config.coordinateSystems[coordinateSystem].ymin;
+                                var coordinateXmax = mapFrame.config.coordinateSystems[coordinateSystem].xmax;
+                                var coordinateYmax = mapFrame.config.coordinateSystems[coordinateSystem].ymax;
                             }
-                            if (response.featureCollection.layers[0].featureSet.features.length > 0) {
-                                console.log("Features returned from query to " + mapFrame.config.portalURL + "/sharing/rest/content/features/generate...")
-                                console.log(response.featureCollection)
-                                // If valid geometry
-                                if (response.featureCollection.layers[0].featureSet.features[0].geometry != null) {
-                                    // If geometry type is line or polygon
-                                    if (((geometryType == "line") || (geometryType == "polygon")) && (dataType == "csv")) {
-                                        // Generate line/polygon feature collection
-                                        pointsToLinePolygon(response.featureCollection,name);
-                                    }
-                                    // If point
-                                    else {
-                                        // Add the feature collection to the map
-                                        addFeaturesToMap(response.featureCollection,name);
-                                    }
-                                }
-                                else {
-                                    // Show error message
-                                    showError(mapFrame.nls.noValidFeaturesError);
-                                }
+                        }
+
+                        // For each record in the CSV
+                        var validXValues = 0;
+                        var validYValues = 0;
+                        var invalidXValues = 0;
+                        var invalidYValues = 0;
+                        arrayUtils.forEach(items, function (item) {
+                            // Get the X and Y values
+                            var xValue = csvStore.getValue(item, mapFrame.xCoordTextBox.get('value'));
+                            var yValue = csvStore.getValue(item, mapFrame.yCoordTextBox.get('value'));
+
+                            // If the X value is more than the minimum set and less than the maximum set
+                            if (Number(xValue) > Number(coordinateXmin) && Number(xValue) < Number(coordinateXmax)) {
+                                validXValues++;
                             }
                             else {
-                                // Show error message
-                                showError(mapFrame.nls.noFeaturesError);
+                                invalidXValues++;
                             }
-                        }),
-                        error: lang.hitch(this, showError)
-                    });
+                            // If the Y value is more than the minimum set and less than the maximum set
+                            if (Number(yValue) > Number(coordinateYmin) && Number(yValue) < Number(coordinateYmax)) {
+                                validYValues++;
+                            }
+                            else {
+                                invalidYValues++;
+                            }
+                        });
+                        console.log("Validated CSV file - Valid X Values: " + validXValues + ", Valid Y Values: " + validYValues + "...");
+                        console.log("Validated CSV file - Invalid X Values: " + invalidXValues + ", Invalid Y Values: " + invalidYValues + "...");
+
+                        // If there are no invalid coordinates
+                        if (invalidXValues == 0 && invalidYValues == 0) {
+                            // Get all the fields from the CSV file
+                            fields = csvStore.getAttributes(items[0]);
+                            layerFields = [];
+                            // Go through each of the fields and populate the field info
+                            fields.forEach(function (field) {
+                                var fieldInfo = {}
+                                fieldInfo['name'] = field;
+                                fieldInfo['alias'] = field;
+                                layerFields.push(fieldInfo);
+                            });
+                            // Define the input parameters for generate features
+                            var params = {
+                                'name': name,
+                                'targetSR': mapFrame.map.spatialReference,
+                                'maxRecordCount': 10000,
+                                'locationType': "coordinates",
+                                'longitudeFieldName': mapFrame.xCoordTextBox.get('value'),
+                                'latitudeFieldName': mapFrame.yCoordTextBox.get('value'),
+                                'columnDelimiter': columnDelimiter,
+                                'layerInfo': {
+                                    "type": "Feature Layer",
+                                    "geometryType": "esriGeometryPoint",
+                                    "fields": layerFields
+                                },
+                                'enforceInputFileSizeLimit': true,
+                                'enforceOutputJsonSizeLimit': true
+                            };
+
+                            var myContent = {
+                                'filetype': "csv",
+                                'publishParameters': JSON.stringify(params),
+                                'f': 'json',
+                                'callback.html': 'textarea'
+                            };
+
+                            // Use the rest generate operation to generate a feature collection
+                            request({
+                                url: mapFrame.config.portalURL + "/sharing/rest/content/features/generate",
+                                content: myContent,
+                                form: dom.byId("uploadForm"),
+                                handleAs: "json",
+                                load: lang.hitch(this, function (response) {
+                                    if (response.error) {
+                                        showError(response.error);
+                                    }
+                                    if (response.featureCollection.layers[0].featureSet.features.length > 0) {
+                                        console.log("Features returned from query to " + mapFrame.config.portalURL + "/sharing/rest/content/features/generate...")
+                                        console.log(response.featureCollection)
+                                        // If valid geometry
+                                        if (response.featureCollection.layers[0].featureSet.features[0].geometry != null) {
+                                            // If geometry type is line or polygon
+                                            if (((geometryType == "line") || (geometryType == "polygon")) && (dataType == "csv")) {
+                                                // Generate line/polygon feature collection
+                                                pointsToLinePolygon(response.featureCollection, name);
+                                            }
+                                                // If point
+                                            else {
+                                                // Add the feature collection to the map
+                                                addFeaturesToMap(response.featureCollection, name);
+                                            }
+                                        }
+                                        else {
+                                            // Show error message
+                                            showError(mapFrame.nls.noValidFeaturesError);
+                                        }
+                                    }
+                                    else {
+                                        // Show error message
+                                        showError(mapFrame.nls.noFeaturesError);
+                                    }
+                                }),
+                                error: lang.hitch(this, showError)
+                            });
+                        }
+                            // Show error
+                        else {
+                            var validCoordinatesMessage = "Valid Coordinate ranges are:" + "\nX Minimum: " + coordinateXmin + "\nY Minimum: " + coordinateYmin + "\nX Maximum: " + coordinateXmax + "\nY Maximum: " + coordinateYmax;
+                            var errorMessage = mapFrame.nls.notValidCoordinatesError + "\n\n" + "Invalid X Values: " + invalidXValues + ", Invalid Y Values: " + invalidYValues + "\n\n" + validCoordinatesMessage;
+                            showError(errorMessage);
+                        }
+                    }
+                    // Show error
+                    else {
+                        showError(mapFrame.nls.notValidXYFieldsCSVError);
+                    }
                 }),
                 onError: lang.hitch(this, function (error) {
                     // Show error
@@ -500,7 +578,7 @@ define(["dojo/_base/declare",
                 'callback.html': 'textarea'
             };
 
-            // Use the rest generate operation to generate a feature collection from the zipped shapefile
+            // Use the rest generate operation to generate a feature collection
             request({
                 url: mapFrame.config.portalURL + '/sharing/rest/content/features/generate',
                 content: myContent,
@@ -550,7 +628,7 @@ define(["dojo/_base/declare",
                 'callback.html': 'textarea'
             };
 
-            // Use the rest generate operation to generate a feature collection from the zipped shapefile
+            // Use the rest generate operation to generate a feature collection
             request({
                 url: mapFrame.config.portalURL + '/sharing/rest/content/features/generate',
                 content: myContent,
@@ -728,14 +806,15 @@ define(["dojo/_base/declare",
         }
 
         // FUNCTION - Add features to map
-        function addFeaturesToMap(featureCollection,name) {
+        function addFeaturesToMap(featureCollection, name) {
             console.log("Adding features to the map...")
             var fullExtent;
             var layers = [];
             arrayUtils.forEach(featureCollection.layers, function (layer) {
                 var infoTemplate = new InfoTemplate("Details", "${*}");
                 var featureLayer = new FeatureLayer(layer, {
-                    infoTemplate: infoTemplate
+                    infoTemplate: infoTemplate,
+                    outFields: ["*"]
                 });
                 featureLayer.type = "Feature Layer";
                 // Add name of layer in proper text
@@ -746,6 +825,28 @@ define(["dojo/_base/declare",
                 });
                 fullExtent = fullExtent ?
                   fullExtent.union(featureLayer.fullExtent) : featureLayer.fullExtent;
+
+                // Label the points if required
+                if (mapFrame.labelTextBox.get('value') != null && mapFrame.labelTextBox.get('value').trim() != "") {
+                    console.log("Labelling Points...");
+                    // Set symbology for the text
+                    var fontColor = new Color("#000000");
+                    var pointsLabel = new TextSymbol().setColor(fontColor);
+                    pointsLabel.font.setSize("12pt");
+                    pointsLabel.font.setFamily("arial");
+                    pointsLabel.font.setWeight(Font.WEIGHT_BOLD)
+
+                    // Set the labelling expression
+                    var parameters = {
+                        "labelExpressionInfo": { "value": "{" + mapFrame.labelTextBox.get('value') + "}" },
+                        "labelPlacement": "always-horizontal"
+                    };
+
+                    // Create the label class and assign to the feature layer
+                    var labelClass = new LabelClass(parameters);
+                    labelClass.symbol = pointsLabel;
+                    featureLayer.setLabelingInfo([labelClass]);
+                }
                 layers.push(featureLayer);
             });
                 

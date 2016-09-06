@@ -29,7 +29,11 @@
   "coordinateSystems": [
     {
       "label": "WGS84",
-      "wkid": "4326"
+      "wkid": "4326",
+      "xmin":"-180", 
+		  "xmax":"180", 
+		  "ymin":"-90", 
+		  "ymax":"90"
     }
   ]
 }

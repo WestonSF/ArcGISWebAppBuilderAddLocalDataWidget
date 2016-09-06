@@ -10,12 +10,14 @@ Adds local data to a map - CSV, shapefiles and GPX.
 * Creates a feature layer from a CSV, shapefile or GPX and adds to the map.
 * Dynamically symbolise the layers added to the map.
 * Add polyline and polygon data from a CSV file.
+* Labelling of features.
 
 
 ## Requirements
 
 * Notepad or your favorite HTML editor
 * Web browser with access to the Internet
+* In the config.json file for the application, set the "showlabel" parameter in the "mapOptions" object to true
 
 
 ## Installation Instructions
