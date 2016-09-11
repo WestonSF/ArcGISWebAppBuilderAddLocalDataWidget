@@ -17,7 +17,12 @@ Adds local data to a map - CSV, shapefiles and GPX.
 
 * Notepad or your favorite HTML editor
 * Web browser with access to the Internet
-* In the config.json file for the application, set the "showlabel" parameter in the "mapOptions" object to true
+* In the config.json file for the application, set the "showLabels" parameter in the "mapOptions" object to true e.g.
+```
+"mapOptions": {
+      "showLabels" : true
+    }
+```
 
 
 ## Installation Instructions
