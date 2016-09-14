@@ -429,14 +429,14 @@ define(["dojo/_base/declare",
                             var yValue = csvStore.getValue(item, mapFrame.yCoordTextBox.get('value'));
 
                             // If the X value is more than the minimum set and less than the maximum set
-                            if (Number(xValue) > Number(coordinateXmin) && Number(xValue) < Number(coordinateXmax)) {
+                            if (Number(xValue) > Number(coordinateXmin) && Number(xValue) <= Number(coordinateXmax)) {
                                 validXValues++;
                             }
                             else {
                                 invalidXValues++;
                             }
                             // If the Y value is more than the minimum set and less than the maximum set
-                            if (Number(yValue) > Number(coordinateYmin) && Number(yValue) < Number(coordinateYmax)) {
+                            if (Number(yValue) > Number(coordinateYmin) && Number(yValue) <= Number(coordinateYmax)) {
                                 validYValues++;
                             }
                             else {
@@ -805,6 +805,7 @@ define(["dojo/_base/declare",
                     outFields: ["*"]
                 });
                 featureLayer.type = "Feature Layer";
+
                 // Add name of layer in proper text
                 featureLayer.name = name.replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
                 // Associate the feature with the popup on click to enable highlight and zoom to
