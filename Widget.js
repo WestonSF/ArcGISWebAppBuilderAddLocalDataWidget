@@ -415,6 +415,10 @@ define(["dojo/_base/declare",
                                 var coordinateYmin = mapFrame.config.coordinateSystems[coordinateSystem].ymin;
                                 var coordinateXmax = mapFrame.config.coordinateSystems[coordinateSystem].xmax;
                                 var coordinateYmax = mapFrame.config.coordinateSystems[coordinateSystem].ymax;
+                                // get spatial reference of selected option.
+								var coordSystem = {};
+								coordSystem.wkid = Number(mapFrame.coordSystemSelect.value);
+								coordSystem.latestWkid = Number(mapFrame.coordSystemSelect.value);
                             }
                         }
 
@@ -461,6 +465,7 @@ define(["dojo/_base/declare",
                             // Define the input parameters for generate features
                             var params = {
                                 'name': name,
+                                'sourceSR': coordSystem,
                                 'targetSR': mapFrame.map.spatialReference,
                                 'locationType': "coordinates",
                                 'longitudeFieldName': mapFrame.xCoordTextBox.get('value'),
